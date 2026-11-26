@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CNC切削计算器</title>
+<title>CNC切削转速进给计算器</title>
 <link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;font-family:system-ui, sans-serif}
@@ -55,12 +55,18 @@ select,input{width:100%;padding:10px;font-size:16px;background:#333;color:#fff;b
       <option>高速钢</option>
     </select>
   </div>
+  <div class="row">
+    <label>进给模式</label>
+    <select id="feedMode">
+      <option value="G94">G94 mm/min</option>
+      <option value="G95">G95 mm/r</option>
+    </select>
+  </div>
 </div>
 
 <div class="box result" id="res">
 <div>转速 S: -- rpm</div>
-<div>进给 F(G95): -- mm/r</div>
-<div>进给 F(G94): -- mm/min</div>
+<div>进给 F: -- </div>
 <div>切削速度 Vc: -- m/min</div>
 <div id="fzLine">每齿进给 fz: -- mm/z</div>
 <div id="fLine" style="display:none">每转进给 f: -- mm/r</div>
@@ -115,6 +121,7 @@ function calc(){
   const toolType = $("#toolType").value;
   const matKey = $("#mat").value;
   const toolMat = $("#toolMat").value === "硬质合金" ? "carb" : "hss";
+  const feedMode = $("#feedMode").value;
   const D = Number($("#D").value);
   const z = Number($("#z").value);
   const p = param[matKey][toolType][toolMat];
@@ -138,10 +145,16 @@ function calc(){
     $("#formulaTip").textContent=`钻头：n = 1000·Vc/(π·D)，F = n × f（每转进给）。深孔注意啄钻排屑`;
   }
 
+  let feedText = "";
+  if(feedMode === "G94"){
+    feedText = `${fG94.toFixed(0)} mm/min (G94)`;
+  }else{
+    feedText = `${fG95.toFixed(3)} mm/r (G95)`;
+  }
+
   $("#res").innerHTML = `
 <div>转速 S: ${n.toFixed(0)} rpm</div>
-<div>进给 F(G95): ${fG95.toFixed(3)} mm/r</div>
-<div>进给 F(G94): ${fG94.toFixed(0)} mm/min</div>
+<div>进给 F: ${feedText}</div>
 <div>切削速度 Vc: ${vc} m/min</div>
 <div id="fzLine">每齿进给 fz: ${fz?fz.toFixed(3):''} mm/z</div>
 <div id="fLine">每转进给 f: ${f?f.toFixed(3):''} mm/r</div>
