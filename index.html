@@ -25,7 +25,7 @@ button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border
 <div class="card">
 <h2>📌 数控刀具参数选择</h2>
 <label>切削档位</label>
-<select id="level" onchange="calc()">
+<select id="level">
 <option value="cons">保守（稳，防崩刀 / 振刀）</option>
 <option value="mid" selected>适中（常规加工）</option>
 <option value="high">偏高（效率优先，刚性要好）</option>
@@ -77,7 +77,7 @@ button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border
 <option value="g94">G94  mm/min</option>
 <option value="g95">G95  mm/r</option>
 </select>
-<button onclick="calc()">计算转速进给</button>
+<button id="calcBtn" onclick="calc()">计算转速进给</button>
 <button class="btn-copy" onclick="copyRes()">复制结果</button>
 </div>
 <div class="card">
@@ -140,13 +140,11 @@ function onTypeChange(){
     document.getElementById("tip").textContent = t === "drill"
         ? "钻头：n = 1000·Vc /（π·D），进给 F = n × f（每转进给）。深孔注意啄钻排屑。"
         : "铣刀：n = 1000·Vc /（π·D），Vf = n × z × fz。新参数先按计算值 70% 试切，稳定后再往上加。";
-    calc();
 }
 
 function onModeChange(){
     const m = document.getElementById("calcMode").value;
     document.getElementById("customNRow").classList.toggle("hidden", m !== "n");
-    calc();
 }
 
 function calc(){
@@ -220,8 +218,9 @@ function copyRes(){
     }
 }
 
-document.querySelectorAll("select,input").forEach(el=>el.addEventListener("input",calc));
+// 仅页面初始化界面状态，不自动计算；结果须点击按钮后生成
 onTypeChange();
+onModeChange();
 </script>
 </body>
 </html>
