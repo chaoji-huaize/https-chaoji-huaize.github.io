@@ -24,6 +24,12 @@ button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border
 <body>
 <div class="card">
 <h2>📌 数控刀具参数选择</h2>
+<label>切削档位</label>
+<select id="level" onchange="calc()">
+<option value="cons">保守（稳，防崩刀 / 振刀）</option>
+<option value="mid" selected>适中（常规加工）</option>
+<option value="high">偏高（效率优先，刚性要好）</option>
+</select>
 <label>刀具类型</label>
 <select id="toolType" onchange="onTypeChange()">
 <option value="endmill">立铣刀（按每齿进给 fz）</option>
@@ -46,13 +52,6 @@ button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border
 <option value="hard">硬质合金</option>
 <option value="hss">高速钢</option>
 </select>
-<div id="procRow">
-<label>工序</label>
-<select id="proc">
-<option value="rough">粗铣 / 钻孔</option>
-<option value="fine">精铣 / 修钻</option>
-</select>
-</div>
 <div class="row">
 <div>
 <label>刀具直径 D (mm)</label>
@@ -87,30 +86,37 @@ button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border
 </div>
 
 <script>
-// ===== 立铣刀参数：vc(m/min) / fz(mm/z) =====
+// ===== 立铣刀基准参数（适中档，vc m/min / fz mm/z） =====
 const mill = {
-"45#":{ hard:{rough:{vc:100,fz:0.12},fine:{vc:120,fz:0.06}}, hss:{rough:{vc:25,fz:0.08},fine:{vc:30,fz:0.04}} },
-"Q235":{ hard:{rough:{vc:110,fz:0.14},fine:{vc:130,fz:0.07}}, hss:{rough:{vc:28,fz:0.08},fine:{vc:32,fz:0.04}} },
-"40Cr":{ hard:{rough:{vc:75,fz:0.10},fine:{vc:95,fz:0.05}}, hss:{rough:{vc:18,fz:0.06},fine:{vc:22,fz:0.03}} },
-"304":{ hard:{rough:{vc:50,fz:0.08},fine:{vc:60,fz:0.04}}, hss:{rough:{vc:12,fz:0.05},fine:{vc:15,fz:0.025}} },
-"HT200":{ hard:{rough:{vc:75,fz:0.15},fine:{vc:95,fz:0.08}}, hss:{rough:{vc:20,fz:0.10},fine:{vc:25,fz:0.05}} },
-"6061":{ hard:{rough:{vc:320,fz:0.20},fine:{vc:420,fz:0.10}}, hss:{rough:{vc:80,fz:0.12},fine:{vc:90,fz:0.06}} },
-"HRC32":{ hard:{rough:{vc:40,fz:0.06},fine:{vc:45,fz:0.04}}, hss:{rough:{vc:10,fz:0.04},fine:{vc:12,fz:0.02}} },
-"HRC60":{ hard:{rough:{vc:22,fz:0.03},fine:{vc:26,fz:0.02}}, hss:{rough:{vc:5,fz:0.02},fine:{vc:6,fz:0.01}} },
-"TC4":{ hard:{rough:{vc:35,fz:0.06},fine:{vc:40,fz:0.035}}, hss:{rough:{vc:9,fz:0.04},fine:{vc:11,fz:0.02}} }
+"45#":{ hard:{vc:100,fz:0.12}, hss:{vc:25,fz:0.08} },
+"Q235":{ hard:{vc:110,fz:0.14}, hss:{vc:28,fz:0.08} },
+"40Cr":{ hard:{vc:75,fz:0.10}, hss:{vc:18,fz:0.06} },
+"304":{ hard:{vc:50,fz:0.08}, hss:{vc:12,fz:0.05} },
+"HT200":{ hard:{vc:75,fz:0.15}, hss:{vc:20,fz:0.10} },
+"6061":{ hard:{vc:320,fz:0.20}, hss:{vc:80,fz:0.12} },
+"HRC32":{ hard:{vc:40,fz:0.06}, hss:{vc:10,fz:0.04} },
+"HRC60":{ hard:{vc:22,fz:0.03}, hss:{vc:5,fz:0.02} },
+"TC4":{ hard:{vc:35,fz:0.06}, hss:{vc:9,fz:0.04} }
 };
 
-// ===== 钻头参数：vc(m/min) / f(mm/r) =====
+// ===== 钻头基准参数（适中档，vc m/min / f mm/r） =====
 const drill = {
-"45#":{ hard:{rough:{vc:70,f:0.18},fine:{vc:80,f:0.12}}, hss:{rough:{vc:20,f:0.14},fine:{vc:24,f:0.09}} },
-"Q235":{ hard:{rough:{vc:80,f:0.20},fine:{vc:90,f:0.13}}, hss:{rough:{vc:22,f:0.16},fine:{vc:26,f:0.10}} },
-"40Cr":{ hard:{rough:{vc:55,f:0.14},fine:{vc:65,f:0.09}}, hss:{rough:{vc:15,f:0.11},fine:{vc:18,f:0.07}} },
-"304":{ hard:{rough:{vc:25,f:0.10},fine:{vc:30,f:0.07}}, hss:{rough:{vc:8,f:0.07},fine:{vc:10,f:0.05}} },
-"HT200":{ hard:{rough:{vc:75,f:0.22},fine:{vc:85,f:0.14}}, hss:{rough:{vc:18,f:0.18},fine:{vc:22,f:0.11}} },
-"6061":{ hard:{rough:{vc:180,f:0.30},fine:{vc:220,f:0.18}}, hss:{rough:{vc:40,f:0.22},fine:{vc:48,f:0.13}} },
-"HRC32":{ hard:{rough:{vc:40,f:0.12},fine:{vc:45,f:0.08}}, hss:{rough:{vc:8,f:0.08},fine:{vc:10,f:0.05}} },
-"HRC60":{ hard:{rough:{vc:15,f:0.06},fine:{vc:18,f:0.04}}, hss:{rough:{vc:4,f:0.04},fine:{vc:5,f:0.03}} },
-"TC4":{ hard:{rough:{vc:20,f:0.08},fine:{vc:24,f:0.05}}, hss:{rough:{vc:6,f:0.05},fine:{vc:7,f:0.03}} }
+"45#":{ hard:{vc:70,f:0.18}, hss:{vc:20,f:0.14} },
+"Q235":{ hard:{vc:80,f:0.20}, hss:{vc:22,f:0.16} },
+"40Cr":{ hard:{vc:55,f:0.14}, hss:{vc:15,f:0.11} },
+"304":{ hard:{vc:25,f:0.10}, hss:{vc:8,f:0.07} },
+"HT200":{ hard:{vc:75,f:0.22}, hss:{vc:18,f:0.18} },
+"6061":{ hard:{vc:180,f:0.30}, hss:{vc:40,f:0.22} },
+"HRC32":{ hard:{vc:40,f:0.12}, hss:{vc:8,f:0.08} },
+"HRC60":{ hard:{vc:15,f:0.06}, hss:{vc:4,f:0.04} },
+"TC4":{ hard:{vc:20,f:0.08}, hss:{vc:6,f:0.05} }
+};
+
+// 档位倍率：保守 / 适中 / 偏高
+const levelMult = {
+    cons: { vc: 0.85, f: 0.75, name: "保守" },
+    mid:  { vc: 1.00, f: 1.00, name: "适中" },
+    high: { vc: 1.15, f: 1.25, name: "偏高" }
 };
 
 let resultText = "";
@@ -118,7 +124,6 @@ let resultText = "";
 function onTypeChange(){
     const t = document.getElementById("toolType").value;
     document.getElementById("zCol").classList.toggle("hidden", t === "drill");
-    document.getElementById("procRow").style.display = t === "drill" ? "none" : "";
     document.getElementById("tip").textContent = t === "drill"
         ? "钻头：n = 1000·Vc /（π·D），进给 F = n × f（每转进给）。深孔注意啄钻排屑。"
         : "铣刀：n = 1000·Vc /（π·D），Vf = n × z × fz。新参数先按计算值 70% 试切，稳定后再往上加。";
@@ -135,14 +140,15 @@ function calc(){
     const type = document.getElementById("toolType").value;
     const mat = document.getElementById("mat").value;
     const tool = document.getElementById("tool").value;
-    const proc = document.getElementById("proc").value;
+    const level = document.getElementById("level").value;
     const D = Number(document.getElementById("D").value);
     const feedMode = document.getElementById("feedMode").value;
     const calcMode = document.getElementById("calcMode").value;
     if(!D){ alert("请填好刀具直径"); return; }
 
     const table = type === "drill" ? drill : mill;
-    const item = table[mat][tool][proc];
+    const base = table[mat][tool];
+    const mult = levelMult[level];
 
     let n, Vc, vcNote = "";
     if(calcMode === "n"){
@@ -151,20 +157,21 @@ function calc(){
         Vc = Math.PI * D * n / 1000;
         vcNote = "（按自定义转速反算）";
     }else{
-        Vc = item.vc;
+        Vc = base.vc * mult.vc;
         n = (1000 * Vc) / (Math.PI * D);
     }
 
     let feedStr = "", otherLines = "";
 
     if(type === "drill"){
-        const f = item.f;
+        const f = base.f * mult.f;
         const Vf = n * f;
         feedStr = feedMode === "g94"
             ? `进给 F(G94)：${Vf.toFixed(0)} mm/min`
             : `进给 F(G95)：${f.toFixed(3)} mm/r`;
         otherLines = `每转进给 f：${f.toFixed(3)} mm/r`;
-        resultText = `转速 S：${n.toFixed(0)} rpm
+        resultText = `切削档位：${mult.name}
+转速 S：${n.toFixed(0)} rpm
 ${feedStr}
 切削速度 Vc：${Vc.toFixed(1)} m/min${vcNote}
 ${otherLines}
@@ -172,13 +179,14 @@ ${otherLines}
     }else{
         const z = Number(document.getElementById("z").value);
         if(!z){ alert("请填好刃数 z"); return; }
-        const fz = item.fz;
+        const fz = base.fz * mult.f;
         const Vf = n * z * fz;
         feedStr = feedMode === "g94"
             ? `进给 F(G94)：${Vf.toFixed(0)} mm/min`
             : `进给 F(G95)：${(z*fz).toFixed(3)} mm/r`;
         otherLines = `每齿进给 fz：${fz.toFixed(3)} mm/z`;
-        resultText = `转速 S：${n.toFixed(0)} rpm
+        resultText = `切削档位：${mult.name}
+转速 S：${n.toFixed(0)} rpm
 ${feedStr}
 切削速度 Vc：${Vc.toFixed(1)} m/min${vcNote}
 ${otherLines}
