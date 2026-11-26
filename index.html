@@ -46,6 +46,7 @@ button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border
 <option value="HRC32">预硬钢 HRC30~35</option>
 <option value="HRC60">淬硬钢 HRC58~62</option>
 <option value="TC4">TC4 钛合金</option>
+<option value="PA66">PA6/PA66 尼龙</option>
 </select>
 <label>刀具材质</label>
 <select id="tool">
@@ -97,7 +98,8 @@ const mill = {
 "6061":{ hard:{vc:320,fz:0.20}, hss:{vc:80,fz:0.12} },
 "HRC32":{ hard:{vc:40,fz:0.06}, hss:{vc:10,fz:0.04} },
 "HRC60":{ hard:{vc:22,fz:0.03}, hss:{vc:5,fz:0.02} },
-"TC4":{ hard:{vc:35,fz:0.06}, hss:{vc:9,fz:0.04} }
+"TC4":{ hard:{vc:35,fz:0.06}, hss:{vc:9,fz:0.04} },
+"PA66":{ hard:{vc:350,fz:0.12}, hss:{vc:120,fz:0.08} }
 };
 
 // ===== 钻头基准参数（适中档，vc m/min / f mm/r） =====
@@ -111,7 +113,8 @@ const drill = {
 "6061":{ hard:{vc:180,f:0.30}, hss:{vc:40,f:0.22} },
 "HRC32":{ hard:{vc:40,f:0.12}, hss:{vc:8,f:0.08} },
 "HRC60":{ hard:{vc:15,f:0.06}, hss:{vc:4,f:0.04} },
-"TC4":{ hard:{vc:20,f:0.08}, hss:{vc:6,f:0.05} }
+"TC4":{ hard:{vc:20,f:0.08}, hss:{vc:6,f:0.05} },
+"PA66":{ hard:{vc:180,f:0.15}, hss:{vc:70,f:0.10} }
 };
 
 // 档位倍率：保守 / 适中 / 偏高
@@ -125,7 +128,8 @@ const levelMult = {
 const riskMap = {
     "304": "⚠️ 易粘刀、加工硬化明显，易出积屑瘤、崩尖；务必充足冷却，先试切！",
     "06Cr19Ni10": "⚠️ 易粘刀、加工硬化明显，易出积屑瘤、崩尖；务必充足冷却，先试切！",
-    "TC4": "⚠️ 钛合金导热差、易粘刀，需高压冷却，进给不宜过小，先试切！"
+    "TC4": "⚠️ 钛合金导热差、易粘刀，需高压冷却，进给不宜过小，先试切！",
+    "PA66": "⚠️ 尼龙受热易熔化粘刀、吸水易变形，优先风冷，避免大量水冷；刃口必须锋利，建议试切！"
 };
 
 let resultText = "";
