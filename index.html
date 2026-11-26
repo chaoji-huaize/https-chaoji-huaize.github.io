@@ -1,0 +1,142 @@
+// index.html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNC进给转速速查</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2196F3">
+<style>
+*{box-sizing:border-box;font-family:system-ui,sans-serif;margin:0;padding:0;}
+body{background:#1a1a1a;color:#eee;padding:16px;max-width:480px;margin:0 auto;}
+.card{background:#2b2b2b;border-radius:12px;padding:16px;margin-bottom:14px;}
+h2{font-size:18px;margin-bottom:12px;color:#42a5f5;}
+label{display:block;margin:10px 0 4px;font-size:14px;}
+select,input{width:100%;padding:10px;border-radius:8px;border:none;font-size:16px;background:#3c3c3c;color:#fff;}
+.result{margin-top:12px;padding:12px;background:#113322;border-radius:8px;color:#89ff94;font-size:16px;line-height:1.6;}
+button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border-radius:8px;margin-top:10px;font-size:16px;}
+.btn-copy{background:#27ae60;margin-top:8px;}
+.tip{font-size:12px;color:#aaa;margin-top:8px;}
+.row{display:flex;gap:10px;}
+.row>div{flex:1;}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>📌 数控铣削参数选择</h2>
+<label>材料</label>
+<select id="mat">
+<option value="45#">45钢 HB170~220</option>
+<option value="40Cr">40Cr调质</option>
+<option value="304">304不锈钢</option>
+<option value="HT200">铸铁HT200</option>
+<option value="6061">6061铝</option>
+<option value="HRC32">预硬钢 HRC30~35</option>
+<option value="HRC60">淬硬钢 HRC58~62</option>
+<option value="TC4">TC4钛合金</option>
+</select>
+<label>刀具</label>
+<select id="tool">
+<option value="hard">硬质合金刀</option>
+<option value="hss">高速钢刀</option>
+</select>
+<label>工序</label>
+<select id="proc">
+<option value="rough">粗铣</option>
+<option value="fine">精铣</option>
+</select>
+<label>刀具直径 D (mm)</label>
+<input type="number" id="D" value="10" step="0.1">
+<label>刃数 z</label>
+<input type="number" id="z" value="4" step="1">
+<div class="row">
+<div>
+<label>进给模式</label>
+<select id="feedMode">
+<option value="g94">G94 mm/min</option>
+<option value="g95">G95 mm/r</option>
+</select>
+</div>
+</div>
+<button onclick="calc()">计算转速进给</button>
+<button class="btn-copy" onclick="copyRes()">复制结果</button>
+</div>
+<div class="card">
+<h2>📊 计算结果</h2>
+<div class="result" id="res">等待计算</div>
+<div class="tip">公式：n=1000Vc/(πD) ；Vf = n × z × fz</div>
+</div>
+
+<script>
+const data = {
+"45#":{
+    hard:{rough:{vc:100,fz:0.12},fine:{vc:120,fz:0.06}},
+    hss:{rough:{vc:25,fz:0.08},fine:{vc:30,fz:0.04}}
+},
+"40Cr":{
+    hard:{rough:{vc:75,fz:0.10},fine:{vc:95,fz:0.05}},
+    hss:{rough:{vc:18,fz:0.06},fine:{vc:22,fz:0.03}}
+},
+"304":{
+    hard:{rough:{vc:50,fz:0.08},fine:{vc:60,fz:0.04}},
+    hss:{rough:{vc:12,fz:0.05},fine:{vc:15,fz:0.025}}
+},
+"HT200":{
+    hard:{rough:{vc:75,fz:0.15},fine:{vc:95,fz:0.08}},
+    hss:{rough:{vc:20,fz:0.10},fine:{vc:25,fz:0.05}}
+},
+"6061":{
+    hard:{rough:{vc:320,fz:0.20},fine:{vc:420,fz:0.10}},
+    hss:{rough:{vc:80,fz:0.12},fine:{vc:90,fz:0.06}}
+},
+"HRC32":{
+    hard:{rough:{vc:40,fz:0.06},fine:{vc:45,fz:0.04}},
+    hss:{rough:{vc:10,fz:0.04},fine:{vc:12,fz:0.02}}
+},
+"HRC60":{
+    hard:{rough:{vc:22,fz:0.03},fine:{vc:26,fz:0.02}},
+    hss:{rough:{vc:5,fz:0.02},fine:{vc:6,fz:0.01}}
+},
+"TC4":{
+    hard:{rough:{vc:35,fz:0.06},fine:{vc:40,fz:0.035}},
+    hss:{rough:{vc:9,fz:0.04},fine:{vc:11,fz:0.02}}
+}
+}
+let resultText = "";
+function calc(){
+    const mat = document.getElementById("mat").value;
+    const tool = document.getElementById("tool").value;
+    const proc = document.getElementById("proc").value;
+    const D = Number(document.getElementById("D").value);
+    const z = Number(document.getElementById("z").value);
+    const feedMode = document.getElementById("feedMode").value;
+    const item = data[mat][tool][proc];
+    const Vc = item.vc;
+    const fz = item.fz;
+    const n = (1000 * Vc) / (Math.PI * D);
+    const Vf = n * z * fz;
+    let feedStr = "";
+    if(feedMode === "g94"){
+        feedStr = `进给F(G94)：${Vf.toFixed(0)} mm/min`;
+    }else{
+        feedStr = `进给F(G95)：${fz.toFixed(3)} mm/r`;
+    }
+    resultText = `切削速度Vc：${Vc} m/min
+转速 S：${n.toFixed(0)} rpm
+每齿进给fz：${fz.toFixed(3)} mm/z
+${feedStr}
+建议试切先用70%参数，稳定再往上加`;
+    const html = resultText.replaceAll("\n","<br>");
+    document.getElementById("res").innerHTML = html;
+}
+function copyRes(){
+    if(!resultText) return alert("先计算！");
+    navigator.clipboard.writeText(resultText).then(()=>alert("✅已复制"));
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+</body>
+</html>
