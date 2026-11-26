@@ -40,7 +40,7 @@ button{width:100%;padding:12px;background:#2196F3;color:white;border:none;border
 <option value="45#">45钢 HB170~220</option>
 <option value="Q235">Q235 碳钢 HB140~180</option>
 <option value="40Cr">40Cr 调质</option>
-<option value="304">304 不锈钢</option>
+<option value="06Cr19Ni10">06Cr19Ni10（304不锈钢）</option>
 <option value="HT200">铸铁 HT200</option>
 <option value="6061">6061 铝</option>
 <option value="HRC32">预硬钢 HRC30~35</option>
@@ -92,6 +92,7 @@ const mill = {
 "Q235":{ hard:{vc:110,fz:0.14}, hss:{vc:28,fz:0.08} },
 "40Cr":{ hard:{vc:75,fz:0.10}, hss:{vc:18,fz:0.06} },
 "304":{ hard:{vc:50,fz:0.08}, hss:{vc:12,fz:0.05} },
+"06Cr19Ni10":{ hard:{vc:70,fz:0.08}, hss:{vc:15,fz:0.05} },
 "HT200":{ hard:{vc:75,fz:0.15}, hss:{vc:20,fz:0.10} },
 "6061":{ hard:{vc:320,fz:0.20}, hss:{vc:80,fz:0.12} },
 "HRC32":{ hard:{vc:40,fz:0.06}, hss:{vc:10,fz:0.04} },
@@ -105,6 +106,7 @@ const drill = {
 "Q235":{ hard:{vc:80,f:0.20}, hss:{vc:22,f:0.16} },
 "40Cr":{ hard:{vc:55,f:0.14}, hss:{vc:15,f:0.11} },
 "304":{ hard:{vc:25,f:0.10}, hss:{vc:8,f:0.07} },
+"06Cr19Ni10":{ hard:{vc:28,f:0.11}, hss:{vc:10,f:0.07} },
 "HT200":{ hard:{vc:75,f:0.22}, hss:{vc:18,f:0.18} },
 "6061":{ hard:{vc:180,f:0.30}, hss:{vc:40,f:0.22} },
 "HRC32":{ hard:{vc:40,f:0.12}, hss:{vc:8,f:0.08} },
@@ -117,6 +119,13 @@ const levelMult = {
     cons: { vc: 0.85, f: 0.75, name: "保守" },
     mid:  { vc: 1.00, f: 1.00, name: "适中" },
     high: { vc: 1.15, f: 1.25, name: "偏高" }
+};
+
+// 风险提示：易粘屑 / 崩尖材料
+const riskMap = {
+    "304": "⚠️ 易粘刀、加工硬化明显，易出积屑瘤、崩尖；务必充足冷却，先试切！",
+    "06Cr19Ni10": "⚠️ 易粘刀、加工硬化明显，易出积屑瘤、崩尖；务必充足冷却，先试切！",
+    "TC4": "⚠️ 钛合金导热差、易粘刀，需高压冷却，进给不宜过小，先试切！"
 };
 
 let resultText = "";
@@ -192,6 +201,8 @@ ${feedStr}
 ${otherLines}
 建议试切先用 70% 参数，稳定再往上加`;
     }
+    const warn = riskMap[mat];
+    if(warn) resultText += "\n" + warn;
     document.getElementById("res").innerHTML = resultText.replaceAll("\n","<br>");
 }
 
